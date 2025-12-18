@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Christmas Maze</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: #fff;
+  margin: 0;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+h1 {
+  margin: 4px 0;
+}
+
+#topbar {
+  display:flex;
+  gap:20px;
+  align-items:center;
+}
+
+#game-container {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+
+.maze {
+  display: grid;
+  gap: 3px;
+}
+
+.cell {
+  width: 28px;
+  height: 28px;
+  background: #222;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.wall {
+  background: #4da6ff;
+}
+
+.player1 {
+  background: #ff4d4d;
+  box-shadow: 0 0 8px #ff4d4d;
+}
+
+.player2 {
+  background: #15a97a;
+  box-shadow: 0 0 8px #15a97a;
+}
+
+.finish {
+  background: gold;
+  box-shadow: 0 0 12px yellow;
+}
+
+#scoreboard-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#scoreboard {
+  font-size:16px;
+  background:#161616;
+  padding:6px 10px;
+  border-radius:8px;
+  display:flex;
+  gap:20px;
+  align-items:center;
+}
+
+button {
+  padding:6px 10px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  background:#444;
+  color:#fff;
+}
+
+button:hover { background:#666; }
+
+#final-winner {
+  font-weight:700;
+  color:#ffd700;
+}
+
+#notification {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+  font-size: 24px;
+  font-weight: bold;
+  z-index: 1000;
+}
+
+@media (max-width:900px){
+  .cell { width:22px; height:22px; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Dual Maze Race</h1>
+
+<div id="scoreboard-wrapper">
+  <div id="scoreboard">
+    <div>RED: <span id="score1">0</span></div>
+    <div>GREEN: <span id="score2">0</span></div>
+    <div>Level: <span id="current-level-display">1 / 8</span></div>
+  </div>
+  <button id="skip-button">Skip</button>
+  <button id="restart-button">Reset</button>
+</div>
+
+<div id="game-container">
+  <div id="maze1" class="maze"></div>
+  <div id="maze2" class="maze"></div>
+</div>
+
+<div id="final-winner"></div>
+<div id="notification"></div>
+
+<script>
+// ----- LEVEL DATA (UNCHANGED) -----
+const levels = [
+  // Level 1 (10x10)
+  [
+    [0,0,1,0,0,0,0,1,0,1],
+    [1,0,1,0,1,1,0,1,0,1],
+    [1,0,0,0,0,1,0,0,0,1],
+    [1,1,1,1,0,1,1,1,0,1],
+    [0,0,0,1,0,0,0,1,0,0],
+    [0,1,0,1,1,1,0,1,1,0],
+    [0,1,0,0,0,0,0,0,1,0],
+    [0,1,1,1,1,1,1,0,1,0],
+    [0,0,0,0,0,0,1,0,0,0],
+    [0,1,1,1,1,0,0,0,1,4]
+  ],
+  // Level 2 (10x10)
+  [
+    [0,0,1,0,1,0,0,1,0,1],
+    [1,0,1,0,1,0,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,0,1,1,1,0,1],
+    [0,0,0,1,0,0,0,1,0,0],
+    [0,1,0,1,1,1,0,1,1,0],
+    [0,1,0,0,0,0,0,0,1,1],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,0,0,0,0,0,1,0,0,0],
+    [0,1,1,1,1,0,0,0,1,4]
+  ],
+  // Level 3 (15x15)
+  [
+    [1,0,1,0,0,1,0,0,1,0,0,1,0,0,4],
+    [1,0,1,1,0,1,1,0,1,1,0,1,0,1,1],
+    [0,0,0,1,0,0,0,0,0,1,0,0,0,1,0],
+    [1,1,0,1,1,1,1,1,0,1,1,1,0,1,0],
+    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+    [0,1,1,1,1,0,1,1,1,1,1,1,1,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,1,1,1,1,1,1,1,1,1,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [1,1,1,1,0,1,1,1,1,0,1,1,1,1,0],
+    [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+    [0,1,0,1,1,1,0,1,1,1,0,1,1,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Level 4 (15x15)
+  [
+    [0,0,1,0,1,0,0,1,0,0,1,0,0,0,4],
+    [1,0,1,0,1,0,1,1,0,1,0,1,1,0,1],
+    [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+    [1,1,1,1,0,1,1,1,0,1,1,1,1,1,0],
+    [0,0,0,1,0,0,0,1,0,0,0,0,0,1,0],
+    [0,1,0,1,1,1,0,1,1,1,1,1,1,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [1,1,1,0,1,1,1,0,1,1,1,0,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,1,1,1,0,1,1,1,1,0,1,1,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  // Level 5 (20x20) PLAYER 1 BAD SPAWN
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+    [1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1,1],
+    [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,1],
+    [1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0],
+    [1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,0,1,1,0],
+    [1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0],
+    [1,0,1,0,1,1,1,1,1,1,0,1,1,1,0,1,1,0,0,0],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0],
+    [1,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0],
+    [0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0],
+    [1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0],
+    [1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4]
+  ],
+  // Level 6 (20x20) PLAYER 1 BAD SPAWN
+  [
+    [1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+    [1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1],
+    [1,0,1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+    [1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1],
+    [1,1,1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1],
+    [1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
+    [1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,4]
+  ],
+  // Level 7 (20x25)
+  [
+    [0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,1],
+    [1,1,0,1,0,1,1,0,1,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,0,0,1,0,1,0,0,0,0,0,1,0,0,1,0,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+    [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+    [1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1],
+    [1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1],
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1],
+    [1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,0,1],
+    [1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,0,1,0,0,1,0,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,1],
+    [1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,1],
+    [1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+    [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,4]
+  ],
+  // Level 8 (20x23)
+  [
+    [0,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1,0,1,1,1],
+    [1,1,0,1,0,1,1,0,1,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,1,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+    [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+    [1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1],
+    [1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1],
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1,1],
+    [1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,0,1],
+    [1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,1],
+    [1,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
+    [1,1,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,1,0,4]
+  ]
+];
+
+// ---------- GAME STATE ----------
+let currentLevel = 0;
+let player1Pos = { x: 0, y: 0 };
+let player2Pos = { x: 0, y: 0 };
+const startPos = { x: 0, y: 0 };
+let score1 = 0;
+let score2 = 0;
+
+// ---------- DOM ----------
+const maze1Div = document.getElementById('maze1');
+const maze2Div = document.getElementById('maze2');
+const skipButton = document.getElementById('skip-button');
+const restartButton = document.getElementById('restart-button');
+const score1Span = document.getElementById('score1');
+const score2Span = document.getElementById('score2');
+const currentLevelDisplay = document.getElementById('current-level-display');
+const finalWinnerDiv = document.getElementById('final-winner');
+const notificationDiv = document.getElementById('notification');
+
+// ---------- HELPERS ----------
+function showNotification(message, duration = 2000) {
+  notificationDiv.textContent = message;
+  notificationDiv.style.display = 'flex';
+  setTimeout(() => notificationDiv.style.display = 'none', duration);
+}
+
+function dimensions(mazeData) {
+  return {
+    width: mazeData[0].length,
+    height: mazeData.length
+  };
+}
+
+// ---------- AUTO SCALE ----------
+function autoScaleMazes(mazeHeightCells) {
+  const cellSize = window.innerWidth <= 900 ? 22 : 28;
+  const mazePixelHeight = mazeHeightCells * cellSize;
+  const availableHeight = window.innerHeight - 180; // UI allowance
+
+  let scale = 1;
+  if (mazePixelHeight > availableHeight) {
+    scale = availableHeight / mazePixelHeight;
+  }
+
+  maze1Div.style.transform = `scale(${scale})`;
+  maze2Div.style.transform = `scale(${scale})`;
+  maze1Div.style.transformOrigin = 'top center';
+  maze2Div.style.transformOrigin = 'top center';
+}
+
+// ---------- BUILD MAZE ----------
+function buildMazeGrid(container, mazeData, playerNum) {
+  container.innerHTML = '';
+  const { width, height } = dimensions(mazeData);
+
+  container.style.gridTemplateColumns = `repeat(${width}, 28px)`;
+  container.style.gridTemplateRows = `repeat(${height}, 28px)`;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+
+      if (mazeData[y][x] === 1) cell.classList.add('wall');
+      if (mazeData[y][x] === 4) cell.classList.add('finish');
+
+      if (x === startPos.x && y === startPos.y) {
+        cell.classList.add(playerNum === 1 ? 'player1' : 'player2');
+      }
+
+      cell.id = `maze${playerNum}-cell-${x}-${y}`;
+      container.appendChild(cell);
+    }
+  }
+
+  return { x: startPos.x, y: startPos.y };
+}
+
+// ---------- LOAD LEVEL ----------
+function loadLevel(levelIndex) {
+  currentLevel = levelIndex;
+  const mazeData = levels[currentLevel];
+
+  player1Pos = buildMazeGrid(maze1Div, mazeData, 1);
+  player2Pos = buildMazeGrid(maze2Div, mazeData, 2);
+
+  currentLevelDisplay.textContent =
+    `${currentLevel + 1} / ${levels.length}`;
+
+  finalWinnerDiv.textContent = '';
+
+  autoScaleMazes(mazeData.length);
+}
+
+// ---------- ADVANCE ----------
+function awardPointAndAdvance(player) {
+  if (player === 1) score1++;
+  if (player === 2) score2++;
+
+  score1Span.textContent = score1;
+  score2Span.textContent = score2;
+
+  currentLevel++;
+  if (currentLevel >= levels.length) {
+    let msg =
+      score1 > score2 ? 'RED WINS!' :
+      score2 > score1 ? 'GREEN WINS!' :
+      'TIE GAME!';
+
+    finalWinnerDiv.textContent = msg;
+    showNotification(msg, 2500);
+
+    score1 = score2 = 0;
+    score1Span.textContent = score2Span.textContent = 0;
+    loadLevel(0);
+  } else {
+    loadLevel(currentLevel);
+  }
+}
+
+// ---------- MOVEMENT ----------
+function tryMove(player, dx, dy) {
+  const mazeData = levels[currentLevel];
+  const pos = player === 1 ? player1Pos : player2Pos;
+
+  const nx = pos.x + dx;
+  const ny = pos.y + dy;
+
+  if (!mazeData[ny] || mazeData[ny][nx] === undefined) return;
+  if (mazeData[ny][nx] === 1) return;
+
+  document
+    .getElementById(`maze${player}-cell-${pos.x}-${pos.y}`)
+    .classList.remove(player === 1 ? 'player1' : 'player2');
+
+  pos.x = nx;
+  pos.y = ny;
+
+  const cell =
+    document.getElementById(`maze${player}-cell-${nx}-${ny}`);
+  cell.classList.add(player === 1 ? 'player1' : 'player2');
+
+  if (mazeData[ny][nx] === 4) {
+    alert(`${player === 1 ? 'RED' : 'GREEN'} wins!`);
+    awardPointAndAdvance(player);
+  }
+}
+
+// ---------- INPUT ----------
+document.addEventListener('keydown', e => {
+  switch (e.key) {
+    case 'w': tryMove(1, 0, -1); break;
+    case 'a': tryMove(1, -1, 0); break;
+    case 's': tryMove(1, 0, 1); break;
+    case 'd': tryMove(1, 1, 0); break;
+    case 'ArrowUp': tryMove(2, 0, -1); break;
+    case 'ArrowLeft': tryMove(2, -1, 0); break;
+    case 'ArrowDown': tryMove(2, 0, 1); break;
+    case 'ArrowRight': tryMove(2, 1, 0); break;
+  }
+});
+
+// ---------- BUTTONS ----------
+skipButton.onclick = () => {
+  loadLevel(Math.min(currentLevel + 1, levels.length - 1));
+};
+
+restartButton.onclick = () => {
+  score1 = score2 = 0;
+  score1Span.textContent = score2Span.textContent = 0;
+  loadLevel(0);
+};
+
+// ---------- INIT ----------
+loadLevel(0);
+window.addEventListener('resize', () => {
+  autoScaleMazes(levels[currentLevel].length);
+});
+</script>

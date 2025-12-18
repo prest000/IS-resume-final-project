@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultimate Frisbee — Home</title>
+
+  <!-- Fun & Playful Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #e0e0e2;
+      --card-radius: 14px;
+      --accent-pink: #ffd6e0;
+      --accent-blue: #d8f0ff;
+      --accent-green: #dfffe0;
+      --accent-yellow: #fff6d9;
+      --muted: #596069;
+      --heading: #2f3a3f;
+      --shadow: 0 8px 20px rgba(20, 20, 30, 0.06);
+    }
+
+    html, body {
+      margin: 0;
+      background: linear-gradient(180deg, var(--bg), #e9eaec 80%);
+      font-family: "Nunito", sans-serif;
+      color: var(--muted);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: "Fredoka", sans-serif;
+      color: var(--heading);
+      margin-top: 0;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 36px auto;
+      padding: 28px;
+    }
+
+    header {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .nav {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 8px 14px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      color: var(--heading);
+      font-size: 1rem;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.55));
+      backdrop-filter: blur(6px);
+      padding: 20px;
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+    }
+
+    .pink { background: linear-gradient(180deg, var(--accent-pink), #fff); }
+    .blue { background: linear-gradient(180deg, var(--accent-blue), #fff); }
+    .green { background: linear-gradient(180deg, var(--accent-green), #fff); }
+    .yellow { background: linear-gradient(180deg, var(--accent-yellow), #fff); }
+
+    ul, ol {
+      padding-left: 20px;
+      line-height: 1.45;
+    }
+
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      padding-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Header -->
+    <header>
+      <h1 id="top">Ultimate Frisbee Is SO Fun! 🥏</h1>
+
+      <div class="nav">
+        <a href="index.html">Home</a>
+        <a href="content.html">Content Page</a>
+        <a href="newhowto.html">How to Play</a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <section class="card pink">
+      <h2>Why Ultimate Frisbee Is Fun 🎉</h2>
+      <p>
+        Ultimate frisbee is fun because it mixes the intensity of traditional sports with the freedom of a laid-back,
+        creative game. You’re constantly sprinting, jumping, laying out for catches, and weaving through space, so it
+        feels fast and dynamic—like soccer and basketball blended together, but with a flying disc that adds an entirely
+        new layer of skill.
+      </p>
+      <p>
+        Even casual play feels exhilarating thanks to the constant movement and flow of the game. The disc keeps things
+        unpredictable and exciting!
+      </p>
+    </section>
+
+    <section class="card blue">
+      <h2>The Culture 💛</h2>
+      <p>
+        Ultimate has a one-of-a-kind culture centered around <strong>Spirit of the Game</strong>. Players self-officiate,
+        discuss calls respectfully, and aim for honesty and fairness. The community is welcoming, competitive, and fun—
+        and a perfectly thrown flick or layout catch just looks awesome.
+      </p>
+    </section>
+
+    <section class="card green">
+      <h2>Different Throws 🎯</h2>
+      <ul>
+        <li>Backhand</li>
+        <li>Forehand</li>
+        <li>Hammer</li>
+        <li>Scoober</li>
+        <li>Thumber</li>
+        <li>Chicken Wing</li>
+        <li>Lefty Backhand</li>
+      </ul>
+    </section>
+
+    <section class="card yellow">
+      <h2>Championships Won 🏆</h2>
+      <ol>
+        <li>Utah State Title</li>
+        <li>YCC U20 Nationals</li>
+        <li>BYU Intramurals</li>
+        <li>High School Nationals</li>
+      </ol>
+    </section>
+
+    <section class="card blue">
+      <h2>Helpful Reminders 📣</h2>
+      <p><strong>How to play:</strong> Throwing skills are essential!</p>
+      <p>Speed is nice, but only takes you so far.</p>
+      <p>Please learn the rules before playing! 🙏</p>
+      <p><em>And don’t you dare play with an Aria! 😤</em></p>
+    </section>
+
+    <footer>
+      <a href="#top">Back to top ↑</a>
+    </footer>
+
+  </div>
+</body>
+</html>
